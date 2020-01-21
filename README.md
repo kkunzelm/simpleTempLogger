@@ -1,6 +1,6 @@
 # simpleTempLogger
 
-Temperature logger based on an ESP 8266 node delivering MQTT messages via Wifi. This sketch goes in deep sleep mode once the message string has been sent to the MQTT broker and wakes up periodically to repeat all steps.
+Temperature logger based on an ESP 8266 node delivering MQTT messages via WiFi. This sketch goes in deep sleep mode once the message string has been sent to the MQTT broker and wakes up periodically to repeat all steps.
 
 * The MQTT message contains
   * the name of the influxdb database, i.e. telemetrie
