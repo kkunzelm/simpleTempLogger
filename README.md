@@ -11,10 +11,10 @@ Temperature logger based on an ESP 8266 node delivering MQTT messages via WiFi. 
 * indirect measure of battery voltage. If the voltage is below a threshold level, the sensor stays in deep sleep until brown out occurs.
 * unix time stamp as retrieved by the MCU client from a ntp server
 
-Example of the current MQTT message format (Influx line protocol format): 
+Example of the current MQTT message format (InfluxDB line protocol format): 
 
     telemetrie,qth=JN58SD,sensor=DS18B20,number=2 temperature=22.87,voltage=3475 1579438238000000000
 
 # References
 
-Influx Line Protocol Tutorial [https://docs.influxdata.com/influxdb/v1.7/write_protocols/line_protocol_tutorial] last accessed Jan 2020
+InfluxDB Line Protocol Tutorial [https://docs.influxdata.com/influxdb/v1.7/write_protocols/line_protocol_tutorial] last accessed Jan 2020
