@@ -1,0 +1,68 @@
+Version from: February 2020
+
+Preamble
+========
+
+I have seldom seen such a bad website design as the pages of InfluxDB and Grafana, although these websites are oriented to the current mainstream in terms of appearance. If you as a user are interested in understanding as fast as possible how to work with the offered software, you have to learn from tutorials of other users. The programmers of the websites of InfluxDB and Grafana show a lot of colorful pictures and use big words, but more than empty words can only be found with great effort on these websites. Users of all countries unite and defend yourselves against this colorful crap that is flooding us everywhere at the moment.
+
+In addition, in our time it is a widespread bad habit in many areas of daily life to invent a new nomenclature in order to distinguish oneself from competitors, even for very similar problem solutions. As a result, one has to learn a lot of new vocabulary if one wants to familiarize oneself with a new topic.
+
+It took me a while to understand the interaction of the programs MQTT, Telegraf, InfluxDB and Grafana, which are always mentioned in the context of sensor data as an elegant solution for data transfer, storage and display, as I had to learn a lot of new vocabulary. The enormous number of tutorials and instructions for the installation of these programs suggests that many others have experienced the same problems as I did and that many of these tutorials should serve as documentation of the efforts of the respective authors.
+
+In the following I summarize my attempts to prepare and display the data I measured with my microcontrollers.
+
+Most of it has already been described very well by others. As far as I can still remember, I quote my sources. Since many of these websites are no longer accessible after a short time, I extract the necessary information and summarize it in this document.
+
+Excellent online tutorials to start with
+========================================
+
+* https://www.howtoforge.com/tutorial/how-to-install-tig-stack-telegraf-influxdb-and-grafana-on-ubuntu-1804/
+* https://uriotnews.com/raspberry-pi-iot-sensors-influxdb-mqtt-and-grafana/
+* https://dzone.com/articles/raspberry-pi-iot-sensors-influxdb-mqtt-and-grafana
+
+
+Interaction of MQTT-Telegraf-InfluxDB-Grafana
+=============================================
+
+Principle
+---------
+
+Thanks to the successful development and distribution of the Arduino hardware and software over the last 10-15 years, many microcontrollers with different performance levels can now be easily programmed.
+
+In combination with the microcontroller, numerous sensors are available to perform continuous measurement tasks. The microcontroller can take over the data acquisition and transmission. For a complex evaluation and graphic processing, a somewhat more powerful computer is usually required. For this reason, the data is usually transferred from the microcontroller to a PC for further processing.
+
+The transfer requires that the microcontroller knows the target of the data transfer and that the microcontroller transfers the data in a "language" that is understandable for the target computer. The agreement on how the two communicate is called the "transmission protocol". It is convenient if the transmission protocol is easy to implement, openly available and fault-tolerant. MQTT meets the requirements of a transmission protocol almost perfectly for many measurement tasks.
+
+Therefore MQTT is a widely used protocol with which telemetry data can be transmitted form the microcontroller to a computer.
+
+New vocabulary related to MQTT are for example "MQTT broker", "publishing" and "subscribing". You could just as well say that an MQTT server receives the data sent by the microcontroller and makes it available to other programs for further processing. 
+
+A very well known program that acts as MQTT broker is Mosquitto. Mosquitto can run as a background process (daemon). Mosquitto only receives the data and distributes it.
+
+In order to be able to store the data permanently, you can use a database, for example.
+
+The "translation" of the data between the MQTT protocol and the database format can be done by another program.
+
+In principle, you could use any database for this task. However, since the measurement data are transmitted as time series, one can use time series databases optimized for this task. A widely used open source time series database is InfluxDB.The conversion of the MQTT data into a format understandable for InfluxDB is done by the program Telegraf.
+
+Last, but not least, we need a program with which the time series database can be accessed and which ideally acts as a web server for the graphical presentation of the data. This task is often performed by the program Grafana.
+
+In short
+--------
+
+These programs are often installed, configured and used on a server for collecting, storing and presenting data:
+
+* Mosquitto: Mosquitto acts as MQTT "broker" accepting data coming from sensors, which are called "publisher" in MQTT lingo. The data are published under a so-called "topic".
+* Telegraph: Telegraf "subscribes" to the "topic" of interest and makes this information for the time series database InfluxDB readable.
+* InfluxDB: InfluxDB is an optimized time series database.
+* Grafana: Grafana collects the data from InfluxDB and manages a "dashboard" to visualize such information
+
+
+Install Guides for Telegraf, InfluxDB and Grafana (= TIG) on Debian Buster
+==========================================================================
+
+* https://computingforgeeks.com/install-and-configure-telegraf-on-debian-linux/
+* https://computingforgeeks.com/install-influxdb-on-debian-10-buster-linux/
+* https://computingforgeeks.com/how-to-install-grafana-6-on-ubuntu-18-04/
+
+

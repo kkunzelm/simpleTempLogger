@@ -1,0 +1,96 @@
+Version from: February 2020
+
+Installing and configuring Mosquitto
+====================================
+
+Since the installation depends on both your hardware and your operating system, you should research them specifically for your situation. 
+
+Mosquitto is usually included in the repositories of the individual Linux distributions, but if you want to install a more up-to-date version, you should install directly from https://mosquitto.org/. The corresponding instructions are available there online.
+
+Additionally it is helpful to install the package mosquitto-clients to test the default configuration.
+
+Here are some helpful links to begin with:
+
+* https://medium.com/@rossdanderson/installing-mosquitto-broker-on-debian-2a341fe88981
+* http://www.steves-internet-guide.com/install-mosquitto-linux/
+* https://www.digitalocean.com/community/tutorials/how-to-install-and-secure-the-mosquitto-mqtt-messaging-broker-on-debian-8
+
+In general, test whether the Mosquitto service itself is running (for example: sudo service mosquitto status). With the default installation the MQTT broker is running on port 1883. You can also test whether the MQTT broker is running with 
+
+    netstat –at
+
+Another test, that it is working is to open two terminals. In terminal one subscribe to a test-topic, in terminal two publish a message to the test-topic. This message should be visible in terminal one after publication.
+
+Enter in terminal one:
+
+    mosquitto_sub -h localhost -t "testtopic" -v
+
+Enter in terminal two:
+
+    mosquitto_pub -h localhost -t "testtopic" -m "Testing"
+
+
+## Add user and password protection
+
+By default, Mosquitto will allow anonymous connections, i.e. connections where no username/password is provided. If you want to add user and password protection use the "mosquitto_passwd" command to create a password file.
+
+    mosquitto_passwd /etc/mosquitto/passwd username
+
+Then add the path to your password file in mosquitto.conf:
+
+    password_file /etc/mosquitto/passwd
+
+ In addition to the password_file entry, you also need to edit:
+
+    allow_anonymous false
+
+
+## Individualize Mosquitto
+
+The default mosquitto.conf file is located in the /etc/mosquitto/ folder. Based on this configuration file you can individualize your installation.
+
+Here are some links to Mosquitto configuration tutorials:
+
+* http://www.steves-internet-guide.com/topic-restriction-mosquitto-configuration/
+* http://www.steves-internet-guide.com/mossquitto-conf-file/
+* http://www.steves-internet-guide.com/mqtt-username-password-example/
+* http://www.steves-internet-guide.com/mosquitto-tls/
+* https://www.digitalocean.com/community/questions/how-to-setup-a-mosquitto-mqtt-server-and-receive-data-from-owntracks
+
+Meaningful items to configure are:
+
+    listener 8883 <yourIP>
+    persistence true
+    persistence_location /var/lib/mosquitto/
+    persistence_file mosquitto.db
+    log_dest syslog
+    log_dest stdout
+    log_dest topic
+    log_type error
+    log_type warning
+    log_type notice
+    log_type information
+    connection_messages true
+    log_timestamp true
+    allow_anonymous false
+    password_file /etc/mosquitto/pwfile
+
+
+Finally be sure to run:
+
+    /sbin/ldconfig
+
+
+Hints
+=====
+
+## Time stamp format
+
+If you microcontroller sends data via Mosquitto to InfluxDB please take note that the timestamp format of InfluxDB is rather special.
+
+Everything in InfluxDB is stored and reported in UTC. By default, timestamps are returned in RFC3339 UTC and have nanosecond precision. Grafana, in contrast to InfluxDB, seems to work with [ms] for the timestamp.
+
+
+## Client ID 
+
+Every client which connects to Mosquitto should have an individual ID! Otherwise connections will be terminated if there is still an open connection on the server.

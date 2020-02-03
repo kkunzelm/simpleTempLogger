@@ -1,0 +1,137 @@
+Version from: February 2020
+
+Grafana
+=======
+
+Install Grafana on Debian Buster
+---------------------------------
+from: https://computingforgeeks.com/how-to-install-grafana-6-on-ubuntu-18-04
+
+### Helpful links:
+
+* https://grafana.com/docs/grafana/latest/installation/debian/
+* https://grafana.com/docs/grafana/latest/installation/configuration/
+
+Grafana is not contained in the Debian standard repositories. Therefore we have to add a repository provided by the Grafana developers (for details see: https://grafana.com/docs/grafana/latest/installation/debian/).
+
+Although we have done this several times in the meantime, I mention the following lines again for the sake of completeness. 
+
+### Update system
+
+	sudo apt-get update
+	sudo apt-get upgrade
+	sudo reboot
+
+### Add Grafana APT repository
+
+Add Grafana gpg key which allows you to install signed packages.
+
+	sudo apt-get install -y gnupg2 curl
+	curl https://packages.grafana.com/gpg.key | sudo apt-key add -
+
+Then install Grafana APT repository:
+
+	sudo add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
+
+Once the repository is added, proceed to update your Apt repositories and install Grafana
+
+	sudo apt-get update
+	sudo apt-get install grafana
+
+Start the Grafana service and check its status:
+
+	sudo systemctl start grafana-server
+    sudo systemctl status grafana-server
+   	sudo systemctl enable grafana-server
+
+
+Or:
+
+    sudo service grafana-server start
+    sudo service grafana-server status
+
+
+Access Grafana on Debian / Ubuntu
+----------------------------------
+
+Once the service has been started, you can access its entry webpage by visiting the server IP on port 3000.
+
+If you have an active firewall, for example ufw, allow port 3000 on the firewall.
+
+	sudo ufw allow proto tcp from any to any port 3000
+
+You can check the opened ports on the system.
+
+    sudo netstat -plntu
+
+
+Next open your browser and enter server IP address and port 3000.
+
+Default logins are:
+
+	Username: admin
+	Password: admin
+
+Change the login credentials immediately after authenticating.
+
+
+
+Make Grafana display your data
+==============================
+
+In the beginning, Grafana is totally non-intuitive to use. Therefore, believe me: RTFM first!
+
+### Helpful links:
+
+* https://grafana.com/docs/grafana/latest/guides/basic_concepts/
+* https://grafana.com/docs/grafana/latest/guides/getting_started/
+* https://grafana.com/docs/grafana/latest/features/datasources/influxdb/
+
+
+
+
+Testing the Connection Between InfluxDB, Mosquitto, and Telegraf
+================================================================
+
+We have configured all the components. To test if the connections are working let us start all the components if they aren't already running. 
+
+## Mosquitto:
+
+    mosquitto_sub -h name.of.your.server -t 'sensors'
+
+    mosquitto_pub -h name.of.your.server -p 1883 -t 'your-topic' -m 'name-of-influx-database,tag1=string1,sensor=DS18B20 temp=28'
+
+
+## Telegraf
+
+For 'data_format = "influx"' the data must be sent in a certain format via MQTT.
+
+Example
+
+	telemetrie,qth=JM3AB,sensor=DS18B20 temperature=28
+
+## InfluxDB
+
+Open a terminal and use the command line syntax to display the latest data.
+
+* https://docs.influxdata.com/influxdb/v1.7/tools/shell/
+
+Example
+
+	use sensors
+	SELECT * FROM "sensors" WHERE time > now() - 1h
+
+
+## Creating the Dashboard Using Grafana
+
+The last step is creating a webpage which displays one or more diagrams with your data. Grafana helps you a lot as soon as you have understood their vocabulary. They call the webpage with the diagrams a "dashboard". The first thing is connecting to the web interface of Grafana using this link:
+
+	http://<URL-of-your-Grafana-server>:3000
+
+Now, follow these steps:
+
+- Login to Grafana using (admin/admin)
+- Configure the data source selecting for example InfluxDB
+- Create your "dashboard" with graphs as you prefer
+
+

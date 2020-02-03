@@ -1,0 +1,135 @@
+Version from: February 2020
+
+Telegraf
+========
+
+Getting started with Telegraf
+-----------------------------
+
+Telegraf is a program which - in our case - subscribes to data which are published by our microcontroller to the MQTT broker Mosquitto and writes them into InfluxDB. I am just focusing on this special case that we subscribe to data from Mosquitto and output the data to InfluxDB. But telegraph could do much more.
+
+Install Telegraf (Debian Buster) 
+--------------------------------
+from: https://computingforgeeks.com/install-and-configure-telegraf-on-debian-linux/
+
+Update System
+
+	sudo apt-get update 
+	sudo apt-get upgrade
+ 
+While InfluxDB is contained in the Debian repositories, I could not find Telegraf. Here the Debian maintainers should add a bit more work to complete their system. The InfluxDB from the Debian repository, however, is far behind the current version. Therefore add the Influxdata repository to get an up-to-date version.
+
+Import repository GPG key.
+
+    sudo apt-get install gnupg2 curl wget
+    wget -qO- https://repos.influxdata.com/influxdb.key | sudo apt-key add -
+
+Add InfluxDB APT repository using the command below.
+
+    echo "deb https://repos.influxdata.com/debian buster stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
+
+Once the repository is added, install Telegraf on Debian 10 (Buster).
+
+    sudo apt-get update
+    sudo apt-get install telegraf
+
+
+Configuring Telegraf
+--------------------
+mostly from: https://dzone.com/articles/raspberry-pi-iot-sensors-influxdb-mqtt-and-grafana
+
+### Helpful links:
+
+* https://github.com/influxdata/telegraf/tree/master/plugins/inputs/mqtt_consumer
+* https://github.com/influxdata/telegraf/blob/master/docs/DATA_FORMATS_INPUT.md
+* https://github.com/influxdata/telegraf/tree/master/plugins/parsers/influx
+
+Configuration file location:
+
+- Debian linux: /etc/telegraf/telegraf.conf
+
+Before starting the Telegraf server you need to edit and/or create an initial configuration that specifies where your data come from and where your data should go. On linux systems, the default configuration file telegraf.conf is located in the '/etc/telegraf' directory. It is good practise to make a backup copy of the original file, before you edit it. 
+
+The telegraf.conf file has four sections which might be of interest for our configuration.
+
+These four sections have the headings: 
+
+- 'Input Plugins'
+- 'Processor Plugins'
+- 'Aggregator Plugins'
+- 'Output Plugins'
+
+The example is taken from the InfluxDB/Telegraf documentation: 
+
+* https://github.com/influxdata/telegraf/blob/release-1.13/plugins/inputs/mqtt_consumer/README.md
+
+
+First we need to modify the "Input Plugin" section. In our case we use MQTT via Mosquitto. Therefore we have to add the "inputs.mqtt_consumer". To do this, we add the URL of the MQTT broker, which is the URL of the server, where Mosquitto is running. Please also add the port to which Mosquitto is listening. The next detail, which need individualization are the topics to which Telegraf should subscribe. Finally, we need to tell Telegraf the data format which is used to send the MQTT data to Mosquitto, this is done in the paragraph "## Data format to consume". Of the numerous data formats that the mqtt_consumer can process, the two formats "influx" and "value" are particularly important for us. 
+
+
+	[[inputs.mqtt_consumer]]
+	  ## MQTT broker URLs to be used. The format should be scheme://host:port,
+	  ## schema can be tcp, ssl, or ws.
+	  servers = ["tcp://127.0.0.1:1883"]
+
+	  ## Topics that will be subscribed to.
+	  topics = [
+	    "sensors/location1/#",
+	    "sensors/location2/#",
+	  ]
+
+     ... (commented lines are skipped here)...
+
+	  ## Data format to consume.
+	  ## Each data format has its own unique set of configuration options, read
+	  ## more about them here:
+	  ## https://github.com/influxdata/telegraf/blob/master/docs/DATA_FORMATS_INPUT.md
+	  data_format = "influx"
+
+#### Hint
+
+For 'data_format = "influx"' the data must be sent in a certain format via MQTT.
+
+Example: 
+
+	temp,site=room1 value=28
+
+Using this message, we are adding a measurement of the current temperature called "temp" with a tag named "site" which equals to "room1". The value of "temp" is 28.
+
+This format is called InfluxDB line protocol and it is described in detail here:
+
+* https://docs.influxdata.com/influxdb/v1.7/write_protocols/line_protocol_tutorial/
+
+#### Another hint
+
+In case you decide on the format "value", please note that you not only have to add the line ' data_format = "value"', but also have to define the data type integer, long, float, boolean or string with additional required line 'data_type = "...".  
+
+
+Then, we need to modify the output section. Look for outputs.influxdb and add/modify the following lines:
+
+	# Configuration for sending metrics to InfluxDB
+	# Output Plugin InfluxDB
+	[[outputs.influxdb]]
+	  urls = [ "http://127.0.0.1:8086" ]
+	  database = "<the-name-of-the-database-inside-influxdb>"
+	  skip_database_creation = true
+	  username = "<your-username-for-influxdb>"
+	  password = "<your-password-for-influxdb>"	
+
+
+
+Result
+------
+
+Restart the telegraf service and make sure there is no error.
+
+Linux (sysvinit and upstart installations)
+
+    service telegraf start
+
+or just:
+
+	/etc/init.d/telegraf start
+
+
+Once Telegraf is up and running it will start collecting data and writing them to the desired output.

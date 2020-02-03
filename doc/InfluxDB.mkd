@@ -1,0 +1,295 @@
+Version from: February 2020
+
+InfluxDB
+========
+
+InfluxDB is a time series database. Its command line syntax is similar to the SQL syntax. So far so good, but ... 
+
+... again you have to learn a lot of new, mostly totally non-intuitive vocabulary to understand how to use InfluxDB.
+
+The following sentences are examples from the introduction to InfluxDB:
+
+from: https://docs.influxdata.com/influxdb/v1.7/concepts/key_concepts/
+
+"In InfluxDB, a "series" is the collection of data that share a "retention policy", "measurement", and "tag set".
+
+The "measurement" acts as a container for "tags", "fields", and the "time column". The measurement name is the description of the data that are stored in the associated fields. Measurement names are strings, and, for any SQL users out there, a measurement is conceptually similar to a table.
+
+A single measurement can belong to different "retention policies". A retention policy describes how long InfluxDB keeps data (DURATION) and how many copies of this data is stored in the cluster (REPLICATION)."
+
+The person responsible for such sentences should be dismissed immediately. I wonder why people all over the world put up with this nonsense. 
+
+
+
+Install InfluxDB on Debian Buster
+---------------------------------
+from: https://computingforgeeks.com/install-influxdb-on-debian-10-buster-linux/
+
+Install InfluxDB on Debian 10 (Buster) Linux
+
+Add the official InfluxDB repository.
+
+	sudo apt-get update
+	sudo apt-get install gnupg2 curl wget
+	wget -qO- https://repos.influxdata.com/influxdb.key | sudo apt-key add -
+	echo "deb https://repos.influxdata.com/debian buster stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
+
+Once the repository is added, install InfluxDB on Debian 10 (Buster) Linux:
+
+	sudo apt-get update
+	sudo apt-get install influxdb
+
+The InfluxDB default configuration file is located under /etc/influxdb/influxdb.conf. Most sections are commented out, you can modify it to your liking and restart influxdb service after.
+
+Start and enable the service to start on boot up.
+
+	sudo systemctl enable --now influxdb
+
+Check status:
+
+	~$ systemctl status influxdb
+
+Open InfluxDB service ports on the firewall. For users using ufw firewall, allow service port.
+
+	sudo apt-get install ufw
+	sudo ufw enable
+	sudo ufw allow 22/tcp
+	sudo ufw allow 8086/tcp
+
+By default, InfluxDB uses the following network ports:
+
+* TCP port 8086 is used for client-server communication over InfluxDB’s HTTP API
+* TCP port 8088 is used for the RPC service for backup and restore
+
+
+Now check the opened ports on the system.
+
+    sudo netstat -plntu
+
+Whenever you need to run any InfluxDB commands on the terminal, you need to specify username using -username and password using -password options.
+
+	influx -username 'username' -password 'password'
+
+For curl, use -u to specify username and password separated by a colon.
+
+	curl -G http://localhost:8086/query -u username:password --data-urlencode "q=SHOW DATABASES"
+
+
+
+
+
+InfluxDB Data Model
+-------------------
+I will not try to reformulate the InfluxDB documentation. I simply mostly cite it from here on and add a few extra words where I think it is necessary.
+
+
+from: https://docs.influxdata.com/influxdb/v1.7/concepts/key_concepts/
+from: https://docs.influxdata.com/influxdb/v1.7/write_protocols/line_protocol_reference/#syntax
+
+Citation begins:
+
+The InfluxDB line protocol is a text based format for writing points to the database. Points must be in line protocol format for InfluxDB to successfully parse and write points.
+
+Line protocol syntax
+
+<measurement>[,<tag_key>=<tag_value>[,<tag_key>=<tag_value>]] <field_key>=<field_value>[,<field_key>=<field_value>] [<timestamp>]
+
+[] = optional
+
+
+InfluxDB line protocol tutorial
+-------------------------------
+from: https://docs.influxdata.com/influxdb/v1.7/write_protocols/line_protocol_tutorial/ = sehr hilfreich!
+
+The InfluxDB line protocol is a text based format for writing data to the database. Data must be in line protocol format for InfluxDB to successfully parse and write points (unless you’re using a service plugin).
+
+Using fictional temperature data, this page introduces InfluxDB line protocol. 
+
+
+### Syntax
+
+A single line of text in line protocol format represents one data point in InfluxDB. It informs InfluxDB of the point’s measurement, tag set, field set, and timestamp. The following code block shows a sample of line protocol and breaks it into its individual components:
+
+	weather,location=us-midwest temperature=82 1465839830100400200
+	  |    -------------------- --------------  |
+	  |             |             |             |
+	  |             |             |             |
+	+-----------+--------+-+---------+-+---------+
+	|measurement|,tag_set| |field_set| |timestamp|
+	+-----------+--------+-+---------+-+---------+
+
+Moving across each element in the diagram:
+
+### Measurement
+
+The name of the measurement that you want to write your data to. The measurement is required in line protocol.
+
+In the example, the measurement name is weather.
+
+### Tag set
+
+The tag(s) that you want to include with your data point. Tags are optional in line protocol. Notice that the measurement and tag set are separated by a comma and no spaces.
+
+Separate tag key-value pairs with an equals sign = and no spaces:
+
+	<tag_key>=<tag_value>
+
+Separate multiple tag-value pairs with a comma and no spaces:
+
+	<tag_key>=<tag_value>,<tag_key>=<tag_value>
+
+In the example, the tag set consists of one tag: location=us-midwest. Adding another tag (season=summer) to the example looks like this:
+
+	weather,location=us-midwest,season=summer temperature=82 1465839830100400200
+
+For best performance you should sort tags by key before sending them to the database. The sort should match the results from the Go bytes.Compare function.
+
+### Whitespace I
+
+Separate the measurement and the field set or, if you’re including a tag set with your data point, separate the tag set and the field set with a whitespace. The whitespace is required in line protocol.
+
+Valid line protocol with no tag set:
+
+	weather temperature=82 1465839830100400200
+
+### Field set
+
+The field(s) for your data point. Every data point requires at least one field in line protocol.
+
+Separate field key-value pairs with an equals sign = and no spaces:
+
+	<field_key>=<field_value>
+
+Separate multiple field-value pairs with a comma and no spaces:
+
+	<field_key>=<field_value>,<field_key>=<field_value>
+	
+In the example, the field set consists of one field: temperature=82. Adding another field (humidity=71) to the example looks like this:
+
+	weather,location=us-midwest temperature=82,humidity=71 1465839830100400200
+
+### Whitespace II
+
+Separate the field set and the optional timestamp with a whitespace. The whitespace is required in line protocol if you’re including a timestamp.
+
+### Timestamp
+
+The timestamp for your data point in nanosecond-precision Unix time. The timestamp is optional in line protocol. If you do not specify a timestamp for your data point InfluxDB uses the server’s local nanosecond timestamp in UTC.
+
+In the example, the timestamp is 1465839830100400200 (that’s 2016-06-13T17:43:50.1004002Z in RFC3339 format). The line protocol below is the same data point but without the timestamp. When InfluxDB writes it to the database it uses your server’s local timestamp instead of 2016-06-13T17:43:50.1004002Z.
+
+	weather,location=us-midwest temperature=82
+
+Use the InfluxDB API to specify timestamps with a precision other than nanoseconds, such as microseconds, milliseconds, or seconds. We recommend using the coarsest precision possible as this can result in significant improvements in compression. See the API Reference for more information.
+
+### Setup hint:
+
+Use the Network Time Protocol (NTP) to synchronize time between hosts. InfluxDB uses a host’s local time in UTC to assign timestamps to data; if hosts’ clocks aren’t synchronized with NTP, the timestamps on the data written to InfluxDB can be inaccurate.
+
+### Data types
+
+This section covers the data types of line protocol’s major components: measurements, tag keys, tag values, field keys, field values, and timestamps.
+
+	Measurements, tag keys, tag values, and field keys are always strings.
+
+Note: Because InfluxDB stores tag values as strings, InfluxDB cannot perform math on tag values. In addition, InfluxQL functions do not accept a tag value as a primary argument. It’s a good idea to take into account that information when designing your schema.
+
+Timestamps are UNIX timestamps. The minimum valid timestamp is -9223372036854775806 or 1677-09-21T00:12:43.145224194Z. The maximum valid timestamp is 9223372036854775806 or 2262-04-11T23:47:16.854775806Z. As mentioned above, by default, InfluxDB assumes that timestamps have nanosecond precision. See the API Reference for how to specify alternative precisions.
+
+Field values can be floats, integers, strings, or Booleans:
+
+Floats - by default, InfluxDB assumes all numerical field values are floats.
+
+Store the field value 82 as a float:
+
+weather,location=us-midwest temperature=82 1465839830100400200
+Integers - append an i to the field value to tell InfluxDB to store the number as an integer.
+
+Store the field value 82 as an integer:
+
+	weather,location=us-midwest temperature=82i 1465839830100400200
+
+Strings - double quote string field values (more on quoting in line protocol below).
+
+Store the field value too warm as a string:
+
+	weather,location=us-midwest temperature="too warm" 1465839830100400200
+
+Booleans - specify TRUE with t, T, true, True, or TRUE. Specify FALSE with f, F, false, False, or FALSE.
+
+Store the field value true as a Boolean:
+
+	weather,location=us-midwest too_hot=true 1465839830100400200
+
+Note: Acceptable Boolean syntax differs for data writes and data queries. See Frequently Asked Questions for more information.
+
+Within a measurement, a field’s type cannot differ within a shard, but it can differ across shards. For example, writing an integer to a field that previously accepted floats fails if InfluxDB attempts to store the integer in the same shard as the floats:
+
+	> INSERT weather,location=us-midwest temperature=82 1465839830100400200
+	> INSERT weather,location=us-midwest temperature=81i 1465839830100400300
+	ERR: {"error":"field type conflict: input field \"temperature\" on measurement \"weather\" is type int64, already exists as type float"}
+	But, writing an integer to a field that previously accepted floats succeeds if InfluxDB stores the integer in a new shard:
+
+	> INSERT weather,location=us-midwest temperature=82 1465839830100400200
+	> INSERT weather,location=us-midwest temperature=81i 1467154750000000000
+
+
+
+Create InfluxDB Database and User
+----------------------------------
+
+You can access the content of InfluxDB databases via a command line interface, which is rather similar to the MySQL way of doing things. 
+
+The first steps are explained here:
+
+* https://docs.influxdata.com/influxdb/v1.7/tools/shell/
+
+In order to store data from Telegraf, we need to set up the InfluxDB database and user.
+
+InfluxDB provides the command line tool 'influx' for interacting with an InfluxDB server. 
+
+Running
+
+	influx
+
+connects you to the default InfluxDB server on port '8086'.
+
+Create a new database "sensors" and for example a user "telegraf" with the password "some-password" by running InfluxDB queries below.
+
+	CREATE DATABASE sensors
+	CREATE USER telegraf WITH password 'some-password'
+
+Now check the database and user.
+
+	SHOW DATABASES
+	SHOW USERS
+
+Make sure you get the database and user named 'telegraf' on the InfluxDB server.
+
+Citation ends
+
+
+
+Helpful example commands to beginn with
+---------------------------------------
+
+	CREATE DATABASE sensors
+	SHOW DATABASES
+
+	CREATE USER "telegraf" WITH PASSWORD "telegraf"
+	GRANT all ON sensors TO telegraf
+
+	USE sensors
+
+	DROP DATABASE databaseToDelete
+
+	SHOW TAG KEYS ON sensors
+        SHOW FIELD KEYS ON sensors
+
+Display the last data entries:
+
+	USE sensors
+	SELECT * FROM "sensors" WHERE time > now() - 1h
+
+
+
