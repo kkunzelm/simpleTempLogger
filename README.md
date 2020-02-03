@@ -36,6 +36,17 @@ The numerous holes on the mounting side of the battery compartment allow to moun
 
 For this project I decided to make everything as simple as possible (KISS). For this reason I soldered all connections directly and did not use any plug contacts. The microcontroller was mounted on the battery compartment with self-tapping wood screws (SPAX, 3.0 x 12 mm) and the battery compartment was screwed to the base plate with self-tapping wood screws (SPAX 2.5 x 9 mm). 
 
+## Documentation
+
+You find a minimal documentation, how to setup a server to display your data based on the programs:
+
+* Mosquitto -> Mosquitto.mkd
+* Telegraf -> Telegraf.mkd
+* InfluxDB -> InfluxDB.mkd
+* Grafana -> Grafana.mkd
+
+in the document folder "doc". Start with "MQTT-Telegraf-InfluxDB-Grafana.mkd".
+
 ## References
 
 InfluxDB Line Protocol Tutorial [https://docs.influxdata.com/influxdb/v1.7/write_protocols/line_protocol_tutorial] last accessed Jan 2020
