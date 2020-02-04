@@ -3,6 +3,18 @@ Version from: February 2020
 Grafana
 =======
 
+Grafana Intro
+-------------
+
+Grafana is used to visualize data. As usual you have to learn the Grafana specific language. They call a webpage with graphical elements a dashboard. The structure of the dashboard is similar to the structure of web pages using tables. The tables consist of cells called "panel" in Grafana jargon. Different types of graphics (i.e. line graphs, tables, single stat boxes, lists of alerts, pie charts etc.) can be positioned within a cell. One graphic is displayed per cell.
+
+For the beginner it is completely unintuitive that he has to click on the title of a panel to edit the panel. But it is one of the most positive qualities of the human species that it can adapt to almost anything. Not that this is desirable to adapt to unintuitive programming requirements. But at least it helps to survive the sometimes very twisted logic of programmers. For example, the programmers at Grafana give the obvious symbol of a floppy disk the tool tip note, "Save dashboard". Unfortunately, they do not provide this help for the other symbols. When you hover your mouse over the title, you will see a "pointing finger" icon, but this does not suggest that you need to click on the title to edit the panel.
+
+Important settings are hidden behind the Grafana logo in the upper left corner of the website. Finding this option also took me a while. Please also note the three very suttle vertical dots in the upper left corner of a panel. A click on them opens up further setting options.
+
+But you get used to it, and then you can present your data very appealingly with relatively little effort. So it's worth the effort to fight your way through the initial frustration.
+
+
 Install Grafana on Debian Buster
 ---------------------------------
 from: https://computingforgeeks.com/how-to-install-grafana-6-on-ubuntu-18-04
