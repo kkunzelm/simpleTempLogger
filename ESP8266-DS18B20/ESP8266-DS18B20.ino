@@ -242,8 +242,13 @@ float getTemperature() {
        float temp;
        do {
               DS18B20.requestTemperatures(); 
-              temp = DS18B20.getTempCByIndex(0);
+
+              // Plausibility check for temperature values
+              if(DS18B20.getTempCByIndex(0) > -50 && DS18B20.getTempCByIndex(0) < 150){
+                  temp = DS18B20.getTempCByIndex(0);
+              }
               delay(1000);
+
        } while (temp == 85.0 || temp == (-127.0));     // The power-on reset value of the temperature register is +85°C.
                                                        // Error Code -127: #define DEVICE_DISCONNECTED_C -127
        return temp;
