@@ -89,7 +89,7 @@ const char* mqtt_topic = "sensors";     // sensors is just an example
 
 String databasename = "telemetrie";     // name of the influxdb database, telemetrie is just an example
 String qthlocator = "JN58SD";           // JN58SD = München, just an example
-String sensortyp = "DS18B20";
+String sensortype = "DS18B20";
 String sensorID = "2";                  // 2 is just an example
 String clientID = qthlocator + sensortype + sensorID;      // this clientID is just an example
 String measuredProperty1 = "temperature";
@@ -225,7 +225,7 @@ void reconnect() {
        while (!client.connected()) {
               Serial.print("Attempting MQTT connection...");
               // Attempt to connect
-              if (client.connect(clientID, mqtt_username, mqtt_password)) {
+              if (client.connect(clientID.c_str(), mqtt_username, mqtt_password)) {
                      Serial.println("connected");
               } else {
                      Serial.print("failed, rc=");
